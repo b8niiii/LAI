@@ -1,0 +1,8 @@
+dill
+openai
+faiss-cpu
+python-dotenv
+pydantic
+langchain-community
+langchain
+langchain-openai

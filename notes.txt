@@ -1,0 +1,267 @@
+gdpr funct working:
+from dotenv import load_dotenv
+import os
+from langchain_community.document_loaders import TextLoader
+from langchain.indexes import VectorstoreIndexCreator
+import faiss
+from langchain_community.vectorstores import FAISS
+from langchain_community.docstore.in_memory import InMemoryDocstore
+from langchain_openai import OpenAIEmbeddings
+from langchain_openai import ChatOpenAI
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+import openai
+from langchain.memory import ConversationBufferMemory
+from langchain.chains import ConversationalRetrievalChain
+
+
+load_dotenv()  # This loads the .env file
+OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
+
+txt_file = "C:/Users/aless/lai/venv/testiLeggi/gdpr.txt"
+loader = TextLoader(file_path = txt_file, encoding = "utf-8")
+data = loader.load()
+
+# divisione in chunks con chunk size specifica.
+text_splitter = RecursiveCharacterTextSplitter(
+    chunk_size=1000,  # Adjust this size as needed
+    chunk_overlap=200  # Overlap between chunks
+)
+data = text_splitter.split_documents(data)
+
+embeddings = OpenAIEmbeddings()
+#Now we use FAISS which is facebook ai similarity search which is a library developed by
+# facebook designed to store vectors so that we can search thorough them almost instantaneously
+vectorstore = FAISS.from_documents(data, embedding = embeddings)
+
+query = "what if I don't place cookies on my websites?"
+retriever = vectorstore.as_retriever()
+
+# Retrieve relevant chunks
+relevant_chunks = retriever.invoke(query)
+
+# Print the relevant chunks
+
+
+
+####################################################################################
+                                 POSSIBILI DOMANDE 
+####################################################################################
+1. Data Collection and Processing
+"What types of personal data does your SaaS collect, and how is this data processed and stored? Please include details about the data subjects, the purpose of data collection, and any third-party data processors involved."
+Purpose: This question helps determine the scope and sensitivity of personal data handled 
+by the SaaS, which is crucial for GDPR compliance. It also assesses the roles of any third
+ parties involved in processing the data.
+2. AI and Automated Decision-Making
+"Does your SaaS utilize any AI or machine learning algorithms, particularly in automated 
+decision-making processes? If so, please describe these AI systems, their decision-making
+ processes, and how their outputs are used."
+Purpose: This question identifies if the SaaS falls under the scope of the AIACT, which 
+regulates AI systems, especially those involved in high-risk activities like automated 
+decision-making. Understanding the use of AI is key to assessing compliance with both AIACT
+ and GDPR, particularly regarding transparency and accountability.
+3. Data Subject Rights and Consent Management
+"How does your SaaS handle user consent, and what mechanisms are in place to facilitate the
+ exercise of data subject rights (such as access, rectification, deletion, and data 
+ portability) under GDPR?"
+Purpose: Ensures that the SaaS provides users with the ability to manage their data rights 
+effectively, a core requirement under GDPR. It also examines how the SaaS handles consent,
+ which is essential for lawful data processing.
+4. Security Measures and Data Breach Management
+"What security measures does your SaaS implement to protect personal data, and what is your
+ procedure for handling data breaches, including notification to authorities and affected 
+ data subjects?"
+Purpose: Evaluates the SaaS's ability to protect personal data against unauthorized access
+ or breaches, which is a critical component of GDPR compliance. The question also checks 
+ for compliance with data breach notification requirements.
+5. Compliance with Regulatory Standards
+"What measures have you taken to ensure compliance with relevant regulatory frameworks, 
+including GDPR and AIACT? Please detail any audits, certifications, or legal reviews that
+ have been conducted."
+Purpose: This question assesses the proactive steps taken by the SaaS provider to comply 
+with regulatory standards. It also seeks to understand whether the SaaS has undergone any 
+formal assessments or certifications that could demonstrate compliance.
+6. Other Relevant Information
+"Is there any other information regarding your SaaS's operations, data processing 
+activities, or AI systems that you believe is relevant for assessing compliance with GDPR 
+and AIACT?"
+Purpose: Provides the client with an opportunity to share any additional details that may 
+not have been covered by the previous questions but are crucial for a complete compliance 
+assessment.
+
+# AGENTI 
+
+# Agent 1: Riformulatore
+riformulatore = Agent(
+    role="Legal Writer",
+    goal="""To rewrite user responses in a more structured and legally-aligned manner,
+      ensuring that they are suitable for precise semantic searches within complex regulatory 
+      frameworks like the GDPR and the AI Act.""",
+    verbose=True,
+    backstory=(
+        """You are a legal linguistics expert with a deep understanding of the terminology
+        and linguistic structures typical of legal and regulatory texts. Over the years, 
+        you've mastered the art of decoding complex legal language and reformulating content 
+        to align with legal standards. Your ability to transform ordinary responses into more
+        precise and structured language makes you indispensable for ensuring that texts are
+        ready for advanced semantic analysis. Your role is crucial in making sure that 
+        responses are easily comparable and searchable within complex documents like the GDPR
+        or the AI Act. Your dedication to clarity and legal precision is the cornerstone of your work.
+
+"""
+    )
+)
+
+# Agent 2: Avvocato GDPR
+gdpr_lawyer = Agent(
+    role="Lawyer GDPR Expert",
+    goal="""To assess the compliance of described actions against the provided legal articles,
+      assigning a score based on their legality (1 = perfectly legal, 2 = debatable, 3 = illegal). 
+      If an action is deemed debatable or illegal (scores 2 or 3), the specific article(s) being 
+      violated must be identified and returned as part of the analysis.""",
+    verbose=True,
+    backstory=(
+        """You are an experienced GDPR lawyer with a deep understanding of data protection
+          laws and regulations. Over the years, you've built a reputation for your 
+          meticulous attention to detail and your ability to navigate the complexities 
+          of legal texts. Your expertise lies in interpreting legal articles and evaluating
+            the compliance of various actions against these regulations.
+              Known for your unwavering commitment to upholding the law, you excel at 
+              identifying potential legal pitfalls and ensuring that actions align with 
+              the strict standards of the GDPR. Your keen analytical skills make you a 
+              trusted advisor in determining the legality of actions within the 
+              ever-evolving landscape of data protection.
+"""
+    )
+)
+ 
+# Agent 3: Avvocato AiAct
+aiact_lawyer = Agent(
+    role="Lawyer AIACT Expert",
+    goal="""To assess the compliance of described actions against the provided legal articles,
+      assigning a score based on their legality (1 = perfectly legal, 2 = debatable, 3 = illegal). 
+      If an action is deemed debatable or illegal (scores 2 or 3), the specific article(s) being 
+      violated must be identified and returned as part of the analysis.""",
+    verbose=True,
+    backstory=(
+        """You are an experienced AIACT lawyer with a deep understanding of data protection
+          laws and regulations. Over the years, you've built a reputation for your 
+          meticulous attention to detail and your ability to navigate the complexities 
+          of legal texts. Your expertise lies in interpreting legal articles and evaluating
+            the compliance of various actions against these regulations.
+              Known for your unwavering commitment to upholding the law, you excel at 
+              identifying potential legal pitfalls and ensuring that actions align with 
+              the strict standards of the AIACT. Your keen analytical skills make you a 
+              trusted advisor in determining the legality of actions within the 
+              ever-evolving landscape of data protection.
+"""
+    )
+)
+
+# Agent 4: REPORTER
+reporter = Agent(
+    role="Reporter",
+    goal="""To compile a cascading report based on input from legal experts, 
+    first listing the laws that have been marked as "3" (illegal) and providing 
+    a brief explanation of the specific violations. This is followed by a summary 
+    of the laws marked as "2" (debatable), with concise explanations of the potential 
+    issues. The final report should prioritize clarity and accuracy,
+      ensuring that the most critical legal breaches are immediately evident.""",
+    verbose=True,
+    backstory=(
+        """You are a seasoned legal reporter with a sharp eye for detail and a talent 
+        for distilling complex legal analyses into clear, concise summaries. With years 
+        of experience in legal journalism, you’ve developed the ability to quickly grasp 
+        the nuances of legal violations and articulate them in a structured, easily 
+        digestible format. Your primary strength lies in your ability to organize 
+        information hierarchically, highlighting the most critical issues while ensuring 
+        that all relevant details are accounted for. Tasked with transforming the findings
+          of legal experts into actionable reports, you ensure that the most severe legal 
+          breaches are prioritized and clearly explained, enabling swift decision-making.
+"""
+    )
+)
+# Creating Tasks
+# Task for Researcher Agent: Extract Job Requirements
+rephrase_task = Task(
+    description=(
+        "Analyze the job posting URL provided ({job_posting_url}) "
+        "to extract key skills, experiences, and qualifications "
+        "required. Use the tools to gather content and identify "
+        "and categorize the requirements."
+    ),
+    expected_output=(
+        "A structured list of job requirements, including necessary "
+        "skills, qualifications, and experiences."
+    ),
+    agent=researcher,
+    async_execution=True
+)
+
+
+-----------get structured output-------------------------------------------------------------
+
+from pydantic import BaseModel
+from openai import OpenAI
+
+client = OpenAI()
+
+class CalendarEvent(BaseModel):
+    name: str
+    date: str
+    participants: list[str]
+
+completion = client.beta.chat.completions.parse(
+    model="gpt-4o-2024-08-06",
+    messages=[
+        {"role": "system", "content": "Extract the event information."},
+        {"role": "user", "content": "Alice and Bob are going to a science fair on Friday."},
+    ],
+    response_format=CalendarEvent,
+)
+
+event = completion.choices[0].message.parsed
+
+
+------------------------------------------------------------------------------------------
+                                 RISPOSTE PROVA
+------------------------------------------------------------------------------------------
+Response 0:
+So, our app grabs stuff like your name, email, and what you like, mainly to make the app better for you. The data’s used to log you in and customize your experience. We store everything super safe using encryption, and Amazon's servers handle most of it. Don’t worry, we don’t share your info with anyone sketchy.
+
+Response 1:
+We've got this consent thing sorted where you can easily say yes or no to what data you share. If you ever want to see or change your data, there’s a tool for that too. It’s all tracked in our system so we stay on top of things. We also use some cool software to manage all these requests and make sure everything runs smoothly.
+
+Response 2:
+We keep your data locked up tight with encryption and stuff, and we do regular checks to make sure everything's secure. If something goes wrong, like a hack or whatever, we have a plan to fix it quick and tell everyone who needs to know within 72 hours. We even practice for this kind of thing to stay sharp.
+
+Response 3:
+Yep, our app uses AI to make things easier, like recommending stuff or tweaking settings for you automatically. The AI looks at how you use the app and tries to make it better. But don’t worry, you can turn off the AI stuff if you’re not into that.
+
+Response 4:
+Our app is built with privacy in mind right from the start. We always check to make sure we're following the rules, like GDPR and AIACT. Plus, we regularly review how we handle data and use AI, so we stay on the right side of the law and keep your data safe.
+
+Response 5:
+Basically, our app is a cloud thing that helps you crunch numbers and see your data in a cool dashboard. It’s easy to use, and we’ve made it super secure, so you can trust it with your data. It’s designed to work well whether you’re just starting out or running a big business.
+
+question 0
+So, basically, we collect a bunch of personal data like names, emails, and even some payment info. But to be honest, we just store it all in one big database without much organization. It's mostly used to send out marketing emails and process payments, but we don’t really have any clear process on how we handle or secure it. We also share some of the data with third-party marketing tools without really informing the users. Yeah, I know it's pretty bad.
+
+Question 1:
+
+Uh, so about user consent... we kinda just assume that people agree when they sign up, but we don't really ask them to explicitly consent to anything. We also don’t have any proper tools or processes in place for users to access or delete their data. If someone wants to exercise their rights, they usually have to email us, and honestly, we’re not great at responding. We don't document much of this either. It's definitely something we need to work on.
+
+Question 2:
+
+To be honest, we don’t have strong security measures in place. We just store everything on a basic server without encryption or anything. If there were a data breach, we don’t really have a plan. I guess we would email people if we realized something went wrong, but we haven’t thought much about notifying authorities or setting up a real procedure. Yeah, we need to fix that.
+
+Question 3:
+
+We do use some basic AI to automate stuff like suggesting products to users based on what they've looked at before, but we didn’t really think about how these decisions are made or if they're fair. We just kind of threw the AI in there to help with sales. There's no real transparency about how the AI works, and we don’t really monitor its decisions. It’s kind of a mess.
+
+Question 4:
+
+Honestly, we’ve been flying by the seat of our pants with this whole thing. We haven’t really thought about GDPR or AIACT compliance until now. Our data processing and AI usage are super unorganized, and we know we’re not compliant. There’s a lot that needs to be fixed, like getting proper consents, securing data better, and making sure our AI isn’t doing anything shady.
+
+Question 5:
+
+Our software is a mess, but basically, it’s an online platform that sells products and uses AI to suggest things to users. It collects and stores user data, but we don’t handle it well at all. It definitely needs a lot of improvement to be safe and compliant.
