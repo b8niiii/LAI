@@ -54,13 +54,14 @@ function showNextMessage() {
 }
 
 // Function to send user's responses to the backend
+// Funzione per inviare le risposte dell'utente al backend
 function sendData(answers) {
     fetch('/process', {
-        method: 'POST', // Make a POST request to the server
+        method: 'POST', // Richiesta POST al server
         headers: {
-            'Content-Type': 'application/json', // Send data as JSON
+            'Content-Type': 'application/json', // Il contenuto è in formato JSON
         },
-        body: JSON.stringify({ // Convert the responses array into a JSON object
+        body: JSON.stringify({ // Converti le risposte in formato JSON
             answer0: answers[0],
             answer1: answers[1],
             answer2: answers[2],
@@ -69,17 +70,26 @@ function sendData(answers) {
             answer5: answers[5]
         }),
     })
-    .then(response => response.json()) // Parse the response from the server
+    .then(response => response.json()) // Parse la risposta dal server come JSON
     .then(data => {
-        // Handle the server's response here
-        console.log('Success:', data); // Log the server response
-        appendMessage('bot', `GDPR Response: ${JSON.stringify(data.GDPR)}`); // Show GDPR responses
-        appendMessage('bot', `AIACT Response: ${JSON.stringify(data.AIACT)}`); // Show AIACT responses
+        // Mostra la risposta del backend nella chat
+        // Visualizza le risposte GDPR e AIACT separatamente
+        appendMessage('bot', "GDPR Responses:");
+        data.GDPR.forEach(response => {
+            appendMessage('bot', `Domanda: ${response.domanda}, Voto: ${response.voto}, Risposta: ${response.risposta}`);
+        });
+
+        appendMessage('bot', "AIACT Responses:");
+        data.AIACT.forEach(response => {
+            appendMessage('bot', `Domanda: ${response.domanda}, Voto: ${response.voto}, Risposta: ${response.risposta}`);
+        });
     })
     .catch((error) => {
-        console.error('Error:', error); // Log any errors during the request
+        console.error('Error:', error); // Log degli errori
+        appendMessage('bot', 'Si è verificato un errore nel ricevere la risposta.');
     });
 }
+
 
 // Function to handle user's input and send the message
 function sendMessage() {
