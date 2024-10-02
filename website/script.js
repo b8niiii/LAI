@@ -16,17 +16,17 @@ let currentQuestionIndex = 0;
 // Array to store user's responses
 let userResponses = [];
 
-// Select the HTML elements
+// Select the HTML elements for chat and user input
 const chatBox = document.getElementById('chat-messages');
 const userInput = document.getElementById('user-message');
 const sendBtn = document.getElementById('send-btn');
 
-// Function to add a message to the chat
+// Function to add a message to the chat (either from the user or the bot)
 function appendMessage(sender, text) {
     const messageElem = document.createElement('div');
     messageElem.classList.add('message');
 
-    // Add specific class based on the sender
+    // Add specific class based on the sender (user or bot)
     if (sender === 'user') {
         messageElem.classList.add('user-message');
     } else {
@@ -35,50 +35,83 @@ function appendMessage(sender, text) {
 
     messageElem.textContent = text;
     chatBox.appendChild(messageElem);
-    chatBox.scrollTop = chatBox.scrollHeight;
+    chatBox.scrollTop = chatBox.scrollHeight; // Automatically scroll to the bottom of the chat
 }
 
-// Function to show the next question
+// Function to show the next question in the sequence
 function showNextMessage() {
     if (currentQuestionIndex < questions.length) {
-        appendMessage('bot', questions[currentQuestionIndex]);
+        appendMessage('bot', questions[currentQuestionIndex]); // Display the next question
         currentQuestionIndex++;
     } else {
         appendMessage('bot', "Thanks for your responses! We'll be in touch soon.");
         userInput.disabled = true;
         sendBtn.disabled = true;
 
-        // Here you can handle the collected responses, e.g., send them to a server
-        console.log("User Responses:", userResponses);
-        // Example: sendResponsesToServer(userResponses);
+        // Once all questions are answered, send the responses to the server
+        sendData(userResponses); // Send responses to the backend
     }
 }
 
-// Function to handle user's message
+// Function to send user's responses to the backend
+function sendData(answers) {
+    fetch('/process', {
+        method: 'POST', // Make a POST request to the server
+        headers: {
+            'Content-Type': 'application/json', // Send data as JSON
+        },
+        body: JSON.stringify({ // Convert the responses array into a JSON object
+            answer0: answers[0],
+            answer1: answers[1],
+            answer2: answers[2],
+            answer3: answers[3],
+            answer4: answers[4],
+            answer5: answers[5]
+        }),
+    })
+    .then(response => response.json()) // Parse the response from the server
+    .then(data => {
+        // Handle the server's response here
+        console.log('Success:', data); // Log the server response
+        appendMessage('bot', `GDPR Response: ${JSON.stringify(data.GDPR)}`); // Show GDPR responses
+        appendMessage('bot', `AIACT Response: ${JSON.stringify(data.AIACT)}`); // Show AIACT responses
+    })
+    .catch((error) => {
+        console.error('Error:', error); // Log any errors during the request
+    });
+}
+
+// Function to handle user's input and send the message
 function sendMessage() {
     const userText = userInput.value.trim();
     if (userText !== "") {
-        appendMessage('user', userText);
-        userInput.value = '';
+        appendMessage('user', userText); // Display the user's message in the chat
+        userInput.value = ''; // Clear the input field
 
         // Save the user's response
         userResponses.push(userText);
 
-        setTimeout(showNextMessage, 1000);
+        // If all 6 responses have been collected, send the data to the server
+        if (userResponses.length === 6) {
+            sendData(userResponses); // Send the responses to the server
+        } else {
+            // If not all questions have been answered, show the next question
+            setTimeout(showNextMessage, 1000); // Wait 1 second before showing the next question
+        }
     }
 }
 
 // Event listener for the Send button
 sendBtn.addEventListener('click', sendMessage);
 
-// Allow sending message by pressing "Enter"
+// Allow sending the message by pressing "Enter"
 userInput.addEventListener('keypress', function(event) {
     if (event.key === 'Enter') {
-        sendMessage();
+        sendMessage(); // Send the message if the Enter key is pressed
     }
 });
 
-// Start the conversation
+// Start the conversation when the page loads
 window.onload = function() {
     // Show the initial message after 1 second
     setTimeout(function() {
