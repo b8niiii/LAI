@@ -17,7 +17,7 @@ import json
 
 
 app = Flask(__name__)
-
+CORS(app) 
 # parte importata da main
 
 with open('C:/Users/aless/lai/venv/testiLeggi/gdpr.txt', 'r', encoding='utf-8') as file:
@@ -43,7 +43,7 @@ aiact_faiss_store = FAISS.load_local("C:/Users/aless/lai/venv/aiact_vec_store",
 
 
 
-CORS(app)  # Permette le richieste CORS dal frontend
+ # Permette le richieste CORS dal frontend
 
 # Funzione di esempio per elaborare i dati
 # Funzione per chiamare tutto con le sei risposte
