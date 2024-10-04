@@ -56,12 +56,12 @@ function showNextMessage() {
 // Function to send user's responses to the backend
 // Funzione per inviare le risposte dell'utente al backend
 function sendData(answers) {
-    fetch('/process', {
-        method: 'POST', // Richiesta POST al server
+    fetch('http://127.0.0.1:5000/process', {
+        method: 'POST',
         headers: {
-            'Content-Type': 'application/json', // Il contenuto è in formato JSON
+            'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ // Converti le risposte in formato JSON
+        body: JSON.stringify({
             answer0: answers[0],
             answer1: answers[1],
             answer2: answers[2],
@@ -70,10 +70,15 @@ function sendData(answers) {
             answer5: answers[5]
         }),
     })
-    .then(response => response.json()) // Parse la risposta dal server come JSON
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok ' + response.statusText);
+        }
+        return response.json();
+    })
     .then(data => {
+        // Gestisci i dati ricevuti dal server
         // Mostra la risposta del backend nella chat
-        // Visualizza le risposte GDPR e AIACT separatamente
         appendMessage('bot', "GDPR Responses:");
         data.GDPR.forEach(response => {
             appendMessage('bot', `Domanda: ${response.domanda}, Voto: ${response.voto}, Risposta: ${response.risposta}`);
@@ -85,7 +90,7 @@ function sendData(answers) {
         });
     })
     .catch((error) => {
-        console.error('Error:', error); // Log degli errori
+        console.error('Error:', error);
         appendMessage('bot', 'Si è verificato un errore nel ricevere la risposta.');
     });
 }
