@@ -1,7 +1,7 @@
 import warnings
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-import website.main as main 
+import main  
 from main import tutto
 from openai import OpenAI
 import os
