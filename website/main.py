@@ -68,151 +68,137 @@ and AIACT? """)
 
 domanda5 = input(""" Provide a very concise and brief description of how does your software work: """)
 
+import time
+import logging
+from pydantic import BaseModel
+from typing import List, Dict
+
+class Voti(BaseModel):
+    voto: int
+    risposta: List[str]
+
 def tutto(answer0, answer1, answer2, answer3, answer4, answer5):
+    start_time = time.time()
+    logging.debug(f"Starting tutto() at {start_time}")
+    
     risposte = [answer0, answer1, answer2, answer3, answer4, answer5]
-
-    risposte_migliorate =[]
-
+    logging.debug(f"User answers received: {risposte}")
+    
+    risposte_migliorate = []
+    
     client = OpenAI()
-
-
+    
+    # Start processing the user responses
     for risposta in risposte:
-        completion = client.beta.chat.completions.parse(
+        logging.debug(f"Processing answer: {risposta}")
+        try:
+            completion = client.beta.chat.completions.parse(
                 model="gpt-4o-mini",
                 messages=[
                     {"role": "system", "content": """You are an expert in legal linguistics, skilled at decoding 
                     complex legal language and reformulating it to meet legal standards. Your expertise ensures 
                     that content is clear, precise, and ready for advanced analysis, making legal texts easily 
-                    comparable and searchable, particularly in documents like the GDPR or the AI Act. Your work 
-                    is essential for maintaining clarity and legal accuracy. You are helpinng me learning how to 
-                    write in legal terms, the purpose of this is to make me more comfortable in by written exmas
-                    at the law university. I checked that no legal terms are violated. Don't introduce your summary
-                    but summarize it directly so that I can copy the whole text without modifying it. """},
+                    comparable and searchable, particularly in documents like the GDPR or the AI Act."""},
                     {
                     "role": "user", 
-                    "content": f"Please summarize and reformulate to meet legal standard the following text: {risposta}. Make it max 200 words"}]
-                
-        )
-        summary = completion.choices[0].message.content
-        risposte_migliorate.append(summary)
+                    "content": f"Please summarize and reformulate to meet legal standard the following text: {risposta}. Make it max 200 words"}
+                ]
+            )
+            summary = completion.choices[0].message.content
+            risposte_migliorate.append(summary)
+            logging.debug(f"Reformulated answer: {summary}")
+        except Exception as e:
+            logging.error(f"Error processing answer '{risposta}': {e}")
+            raise e
 
+    logging.debug(f"Finished processing user responses at {time.time() - start_time} seconds")
+
+    # Split responses into GDPR and AIACT related
     gdpr_related = risposte_migliorate[0:3]
     aiact_related = risposte_migliorate[3:]
+    logging.debug(f"GDPR-related responses: {gdpr_related}")
+    logging.debug(f"AIACT-related responses: {aiact_related}")
 
-
-    article_dic_cleaned_gdpr = {}
-    article_dic_cleaned_aiact = {}
-
-    article_dic_cleaned_gdpr = question_article_dic(gdpr_related, gdpr_faiss_store, gdpr, article_dic_cleaned_gdpr)
-    article_dic_cleaned_aiact = question_article_dic(aiact_related, aiact_faiss_store, aiact, article_dic_cleaned_aiact)
-
-    # forse bisogna inserire uno step qua in mezzo che riduca la quantità di token per ogni articolo riportato
-
-    class Voti(BaseModel):
-        voto: int
-        risposta: List[str]
+    # Process articles and compare with FAISS vectors
+    article_dic_cleaned_gdpr = question_article_dic(gdpr_related, gdpr_faiss_store, gdpr, {})
+    article_dic_cleaned_aiact = question_article_dic(aiact_related, aiact_faiss_store, aiact, {})
+    logging.debug(f"Cleaned article dictionary for GDPR: {article_dic_cleaned_gdpr}")
+    logging.debug(f"Cleaned article dictionary for AIACT: {article_dic_cleaned_aiact}")
 
     votazioni_gdpr: Dict[str, Voti] = {}
 
+    # Process GDPR votes
     for risposta, articoli in article_dic_cleaned_gdpr.items():
-        completion = client.beta.chat.completions.parse(
-            model="gpt-4o-mini",
-            messages=[
-                {
-                    "role": "system", 
-                    "content": """You are a professor in law, skilled at decoding 
-                    complex legal language and reformulating it to meet legal standards. Your expertise ensures 
-                    that the best feedback is always provided to students on their homework. Your work 
-                    is essential for maintaining clarity and accuracy. You are helping students learn how to 
-                    write business plans with a particular exercise: they will give you a brief description on 
-                    the way a particular branch of their businesses works or a brief description of the entire business, 
-                    along with some articles. You will have to give them a score on how precise they have been.
-                    The score is the following: 1 if they are compliant to the GDPR articles you'll be given, 
-                    2 if it is debatable, 3 if they are not compliant."""
-                },
-                {
-                    "role": "user", 
-                    "content": f"""Please go ahead and see if the following description is coherent with the articles provided: 
-                    '{risposta}' - {articoli}. You will use a defined response format. Under "voto" you'll have to insert a grade from
-                    1 to 3 as I already told you, and under "risposta" you need to append your answer on where they
-                    are not compliant or, in case of 2, where they might not be compliant. Ignore the case of 1, 
-                    if you give an empty answer it'll mean that students will get 100/100 as a grade."""
-                }
-            ],
-            response_format= Voti
-        )
-        
-
-        voti_obj = completion.choices[0].message.parsed  # Usa model_validate_json
-        votazioni_gdpr[risposta] = voti_obj
-    # print("------------------------------------------------------------------------------------")
-    # print(list(votazioni_gdpr.values())[2])
-
+        try:
+            completion = client.beta.chat.completions.parse(
+                model="gpt-4o-mini",
+                messages=[
+                    {
+                        "role": "system", 
+                        "content": """You are a professor in law, skilled at decoding 
+                        complex legal language and reformulating it to meet legal standards. Your expertise ensures 
+                        that the best feedback is always provided to students on their homework."""
+                    },
+                    {
+                        "role": "user", 
+                        "content": f"Please go ahead and see if the following description is coherent with the articles provided: "
+                                   f"'{risposta}' - {articoli}. Please provide a vote and response."
+                    }
+                ],
+                response_format=Voti
+            )
+            voti_obj = completion.choices[0].message.parsed
+            votazioni_gdpr[risposta] = voti_obj
+            logging.debug(f"Processed GDPR vote for '{risposta}': {voti_obj}")
+        except Exception as e:
+            logging.error(f"Error processing GDPR vote for '{risposta}': {e}")
+            raise e
 
     votazioni_aiact: Dict[str, Voti] = {}
 
+    # Process AIACT votes
     for risposta, articoli in article_dic_cleaned_aiact.items():
-        completion = client.beta.chat.completions.parse(
-            model="gpt-4o-mini",
-            messages=[
-                {
-                    "role": "system", 
-                    "content": """You are a professor in law, skilled at decoding 
-                    complex legal language and reformulating it to meet legal standards. Your expertise ensures 
-                    that the best feedback is always provided to students on their homework. Your work 
-                    is essential for maintaining clarity and accuracy. You are helping students learn how to 
-                    write business plans with a particular exercise: they will give you a brief description on 
-                    the way a particular branch of their businesses works or a brief description of the entire business, 
-                    along with some articles. You will have to give them a score on how precise they have been.
-                    The score is the following: 1 if they are compliant to the AIACT articles you'll be given, 
-                    2 if it is debatable, 3 if they are not compliant."""
-                },
-                {
-                    "role": "user", 
-                    "content": f"""Please go ahead and see if the following description is coherent with the articles provided: 
-                    '{risposta}' - {articoli}. You will use a defined response format. Under "voto" you'll have to insert a grade from
-                    1 to 3 as I already told you, and under "risposta" you need to append your answer on where they
-                    are not compliant or, in case of 2, where they might not be compliant. Ignore the case of 1, 
-                    if you give an empty answer it'll mean that students will get 100/100 as a grade. Answer in first oerson
-                    directly to the person who has done the research as if you were speaking face to face"""
-                }
-            ],
-            response_format= Voti
-        )
-        
-        voti_obj = completion.choices[0].message.parsed  # Usa model_validate_json
-        votazioni_aiact[risposta] = voti_obj
+        try:
+            completion = client.beta.chat.completions.parse(
+                model="gpt-4o-mini",
+                messages=[
+                    {
+                        "role": "system", 
+                        "content": """You are a professor in law, skilled at decoding 
+                        complex legal language and reformulating it to meet legal standards. Your expertise ensures 
+                        that the best feedback is always provided to students on their homework."""
+                    },
+                    {
+                        "role": "user", 
+                        "content": f"Please go ahead and see if the following description is coherent with the articles provided: "
+                                   f"'{risposta}' - {articoli}. Please provide a vote and response."
+                    }
+                ],
+                response_format=Voti
+            )
+            voti_obj = completion.choices[0].message.parsed
+            votazioni_aiact[risposta] = voti_obj
+            logging.debug(f"Processed AIACT vote for '{risposta}': {voti_obj}")
+        except Exception as e:
+            logging.error(f"Error processing AIACT vote for '{risposta}': {e}")
+            raise e
 
-    risposte_gdpr = []
-    risposte_aiact = []
-
-    # Iterazione per raccogliere prima le chiavi con voto 3, poi quelle con voto 2 per GDPR
-    risposte_gdpr = []
-    risposte_aiact = []
-
-    # Iterazione per raccogliere prima le chiavi con voto 3, poi quelle con voto 2 per GDPR
-    for risposta, voti in sorted(votazioni_gdpr.items(), key=lambda item: item[1].voto, reverse=True):
-        if voti.voto in [2, 3]:
-            risposta_str = '\n\n'.join(voti.risposta)
-            risposte_gdpr.append((risposta, risposta_str, voti.voto))
-
-    # Iterazione per raccogliere prima le chiavi con voto 3, poi quelle con voto 2 per AIACT
-    for risposta, voti in sorted(votazioni_aiact.items(), key=lambda item: item[1].voto, reverse=True):
-        if voti.voto in [2, 3]:
-            risposta_str = '\n\n'.join(voti.risposta)
-            risposte_aiact.append((risposta, risposta_str, voti.voto))
-
-    # Visualizzazione delle risposte come lista di tuple
-    for risposta, voti in sorted(votazioni_gdpr.items(), key=lambda item: item[1].voto, reverse=True):
-        if voti.voto in [2, 3]:
-            risposta_str = '\n\n'.join(voti.risposta)
-            risposte_gdpr.append((risposta, risposta_str, voti.voto))
-
-    for risposta, voti in sorted(votazioni_aiact.items(), key=lambda item: item[1].voto, reverse=True):
-        if voti.voto in [2, 3]:
-            risposta_str = '\n\n'.join(voti.risposta)
-            risposte_aiact.append((risposta, risposta_str, voti.voto))
-
-    # Invece di stampare, restituisci le risposte
+    # Collect and return results
+    risposte_gdpr = [
+        (risposta, '\n\n'.join(voti.risposta), voti.voto)
+        for risposta, voti in sorted(votazioni_gdpr.items(), key=lambda item: item[1].voto, reverse=True)
+        if voti.voto in [2, 3]
+    ]
+    
+    risposte_aiact = [
+        (risposta, '\n\n'.join(voti.risposta), voti.voto)
+        for risposta, voti in sorted(votazioni_aiact.items(), key=lambda item: item[1].voto, reverse=True)
+        if voti.voto in [2, 3]
+    ]
+    
+    logging.debug(f"Final GDPR responses: {risposte_gdpr}")
+    logging.debug(f"Final AIACT responses: {risposte_aiact}")
+    
+    logging.debug(f"Completed tutto() at {time.time() - start_time} seconds")
+    
     return risposte_gdpr, risposte_aiact
-

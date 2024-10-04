@@ -17,7 +17,7 @@ import json
 
 
 app = Flask(__name__)
-CORS(app) 
+CORS(app)  # Permette le richieste CORS dal frontend
 # parte importata da main
 
 with open('C:/Users/aless/lai/venv/testiLeggi/gdpr.txt', 'r', encoding='utf-8') as file:
@@ -43,7 +43,7 @@ aiact_faiss_store = FAISS.load_local("C:/Users/aless/lai/venv/aiact_vec_store",
 
 
 
- # Permette le richieste CORS dal frontend
+
 
 # Funzione di esempio per elaborare i dati
 # Funzione per chiamare tutto con le sei risposte
@@ -73,14 +73,14 @@ def call_tutto(data):
 
 @app.route('/process', methods=['POST'])
 def process():
-    data = request.json  # Ricevi i dati in formato JSON
+    data = request.json
+    app.logger.debug(f"Data received: {data}")  # Log received data
     if not data:
         return jsonify({"error": "No data provided"}), 400
-    
-    # Chiama la funzione che usa `tutto` con i dati ricevuti
+
     result = call_tutto(data)
-    
-    # Restituisci la risposta come JSON
+    app.logger.debug(f"Result generated: {result}")  # Log the result
+
     return jsonify(result), 200
 
 
