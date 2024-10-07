@@ -143,17 +143,19 @@ def tutto(answer0, answer1, answer2, answer3, answer4, answer5):
                 raise e
 
         # Collect and return results
+        # Collect and return results
         risposte_gdpr = [
-            (risposta, '\n\n'.join(voti.risposta), voti.voto)
+            {"domanda": risposta, "risposta": '\n\n'.join(voti.risposta), "voto": voti.voto}
             for risposta, voti in sorted(votazioni_gdpr.items(), key=lambda item: item[1].voto, reverse=True)
             if voti.voto in [2, 3]
         ]
-        
+
         risposte_aiact = [
-            (risposta, '\n\n'.join(voti.risposta), voti.voto)
+            {"domanda": risposta, "risposta": '\n\n'.join(voti.risposta), "voto": voti.voto}
             for risposta, voti in sorted(votazioni_aiact.items(), key=lambda item: item[1].voto, reverse=True)
             if voti.voto in [2, 3]
-        ]
+]
+
         
         logging.debug(f"Final GDPR responses: {risposte_gdpr}")
         logging.debug(f"Final AIACT responses: {risposte_aiact}")
