@@ -1,7 +1,6 @@
 import warnings
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-import main  
 from main import tutto
 from openai import OpenAI
 import os
@@ -17,7 +16,8 @@ import json
 
 
 app = Flask(__name__)
-CORS(app)  # Permette le richieste CORS dal frontend
+CORS(app)
+  # Permette le richieste CORS dal frontend
 # parte importata da main
 
 with open('C:/Users/aless/lai/venv/testiLeggi/gdpr.txt', 'r', encoding='utf-8') as file:
@@ -33,31 +33,35 @@ OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
 
 embeddings = OpenAIEmbeddings(api_key=OPENAI_API_KEY)
 
-gdpr_faiss_store = FAISS.load_local("C:/Users/aless/lai/venv/gdpr_vec_store",
-                                     embeddings,
-                                     allow_dangerous_deserialization=True)
-aiact_faiss_store = FAISS.load_local("C:/Users/aless/lai/venv/aiact_vec_store", 
-                                     embeddings,
-                                     allow_dangerous_deserialization=True)
+gdpr_faiss_store = FAISS.load_local("C:/Users/aless/OneDrive/Documenti/GitHub/LAI/gdpr_vec_store",
+                                        embeddings,
+                                        allow_dangerous_deserialization=True)
+aiact_faiss_store = FAISS.load_local("C:/Users/aless/OneDrive/Documenti/GitHub/LAI/aiact_vec_store", 
+                                        embeddings,
+                                        allow_dangerous_deserialization=True)
 
 
 
 
 
+from flask import jsonify
 
-# Funzione di esempio per elaborare i dati
-# Funzione per chiamare tutto con le sei risposte
 def call_tutto(data):
-    # Prendi le sei risposte inviate dal frontend
-    answer0 = data.get("answer0", "")
-    answer1 = data.get("answer1", "")
-    answer2 = data.get("answer2", "")
-    answer3 = data.get("answer3", "")
-    answer4 = data.get("answer4", "")
-    answer5 = data.get("answer5", "")
+    # Logga i dati ricevuti
+    app.logger.debug(f"Data received: {data}")
     
+    # Prendi le sei risposte inviate dal frontend
+    answers = [data.get(f"answer{i}", None) for i in range(6)]
+    
+    # Controlla che tutte le risposte siano presenti
+    if any(answer is None for answer in answers):
+        app.logger.warning("Some answers are missing.")
+        return jsonify({"error": "One or more answers are missing"}), 400
+    else:
+        app.logger.debug("All answers received correctly.")
+        
     # Chiama la funzione `tutto` con le sei risposte
-    risposte_gdpr, risposte_aiact = tutto(answer0, answer1, answer2, answer3, answer4, answer5)
+    risposte_gdpr, risposte_aiact = tutto(*answers)
     
     # Prepara la risposta in formato JSON
     result = {
@@ -68,12 +72,13 @@ def call_tutto(data):
             {"domanda": r[0], "risposta": r[1], "voto": r[2]} for r in risposte_aiact
         ]
     }
-    return result
+    return jsonify(result)
 
-
+print(66)
 @app.route('/process', methods=['POST'])
 def process():
     data = request.json
+    print(67)
     app.logger.debug(f"Data received: {data}")  # Log received data
     if not data:
         return jsonify({"error": "No data provided"}), 400
