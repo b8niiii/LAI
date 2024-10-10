@@ -88,60 +88,73 @@ def tutto(answer0, answer1, answer2, answer3, answer4, answer5):
 
         # Process GDPR votes
         for risposta, articoli in article_dic_cleaned_gdpr.items():
-            try:
-                completion = client.beta.chat.completions.parse(
-                    model="gpt-4o-mini",
-                    messages=[
-                        {
-                            "role": "system", 
-                            "content": """You are a professor in law, skilled at decoding 
-                            complex legal language and reformulating it to meet legal standards. Your expertise ensures 
-                            that the best feedback is always provided to students on their homework."""
-                        },
-                        {
-                            "role": "user", 
-                            "content": f"Please go ahead and see if the following description is coherent with the articles provided: "
-                                    f"'{risposta}' - {articoli}. Please provide a vote and response."
-                        }
-                    ],
-                    response_format=Voti
-                )
-                voti_obj = completion.choices[0].message.parsed
-                votazioni_gdpr[risposta] = voti_obj
-                logging.debug(f"Processed GDPR vote for '{risposta}': {voti_obj}")
-            except Exception as e:
-                logging.error(f"Error processing GDPR vote for '{risposta}': {e}")
-                raise e
+            completion = client.beta.chat.completions.parse(
+                model="gpt-4o-mini",
+                messages=[
+                    {
+                        "role": "system", 
+                        "content": """You are a professor in law, skilled at decoding 
+                        complex legal language and reformulating it to meet legal standards. Your expertise ensures 
+                        that the best feedback is always provided to students on their homework. Your work 
+                        is essential for maintaining clarity and accuracy. You are helping students learn how to 
+                        write business plans with a particular exercise: they will give you a brief description on 
+                        the way a particular branch of their businesses works or a brief description of the entire business, 
+                        along with some articles. You will have to give them a score on how precise they have been.
+                        The score is the following: 1 if they are compliant to the GDPR articles you'll be given, 
+                        2 if it is debatable, 3 if they are not compliant."""
+                    },
+                    {
+                        "role": "user", 
+                        "content": f"""Please go ahead and see if the following description is coherent with the articles provided: 
+                        '{risposta}' - {articoli}. You will use a defined response format. Under "voto" you'll have to insert a grade from
+                        1 to 3 as I already told you, and under "risposta" you need to append your answer on where they
+                        are not compliant or, in case of 2, where they might not be compliant. Ignore the case of 1, 
+                        if you give an empty answer it'll mean that students will get 100/100 as a grade."""
+                    }
+                ],
+                response_format= Voti
+            )
+
+
+                
+            voti_obj = completion.choices[0].message.parsed
+            votazioni_gdpr[risposta] = voti_obj
+            
 
         votazioni_aiact: Dict[str, Voti] = {}
 
         # Process AIACT votes
         for risposta, articoli in article_dic_cleaned_aiact.items():
-            try:
-                completion = client.beta.chat.completions.parse(
-                    model="gpt-4o-mini",
-                    messages=[
-                        {
-                            "role": "system", 
-                            "content": """You are a professor in law, skilled at decoding 
-                            complex legal language and reformulating it to meet legal standards. Your expertise ensures 
-                            that the best feedback is always provided to students on their homework."""
-                        },
-                        {
-                            "role": "user", 
-                            "content": f"Please go ahead and see if the following description is coherent with the articles provided: "
-                                    f"'{risposta}' - {articoli}. Please provide a vote and response."
-                        }
-                    ],
-                    response_format=Voti
-                )
-                voti_obj = completion.choices[0].message.parsed
-                votazioni_aiact[risposta] = voti_obj
-                logging.debug(f"Processed AIACT vote for '{risposta}': {voti_obj}")
-            except Exception as e:
-                logging.error(f"Error processing AIACT vote for '{risposta}': {e}")
-                raise e
-
+            completion = client.beta.chat.completions.parse(
+                model="gpt-4o-mini",
+                messages=[
+                    {
+                        "role": "system", 
+                        "content": """You are a professor in law, skilled at decoding 
+                        complex legal language and reformulating it to meet legal standards. Your expertise ensures 
+                        that the best feedback is always provided to students on their homework. Your work 
+                        is essential for maintaining clarity and accuracy. You are helping students learn how to 
+                        write business plans with a particular exercise: they will give you a brief description on 
+                        the way a particular branch of their businesses works or a brief description of the entire business, 
+                        along with some articles. You will have to give them a score on how precise they have been.
+                        The score is the following: 1 if they are compliant to the AIACT articles you'll be given, 
+                        2 if it is debatable, 3 if they are not compliant."""
+                    },
+                    {
+                        "role": "user", 
+                        "content": f"""Please go ahead and see if the following description is coherent with the articles provided: 
+                        '{risposta}' - {articoli}. You will use a defined response format. Under "voto" you'll have to insert a grade from
+                        1 to 3 as I already told you, and under "risposta" you need to append your answer on where they
+                        are not compliant or, in case of 2, where they might not be compliant. Ignore the case of 1, 
+                        if you give an empty answer it'll mean that students will get 100/100 as a grade. Answer in first oerson
+                        directly to the person who has done the research as if you were speaking face to face"""
+                    }
+                ],
+                response_format= Voti
+            )
+            voti_obj = completion.choices[0].message.parsed
+            votazioni_aiact[risposta] = voti_obj
+          
         # Collect and return results
         # Collect and return results
         risposte_gdpr = [
