@@ -168,7 +168,7 @@ def tutto(answer0, answer1, answer2, answer3, answer4, answer5):
             for risposta, voti in sorted(votazioni_aiact.items(), key=lambda item: item[1].voto, reverse=True)
             if voti.voto in [2, 3]
 ]
-
+        print('risposte di chat salvate')
         
         logging.debug(f"Final GDPR responses: {risposte_gdpr}")
         logging.debug(f"Final AIACT responses: {risposte_aiact}")

@@ -1,5 +1,5 @@
 import warnings
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, make_response
 from flask_cors import CORS
 from main import tutto
 from openai import OpenAI
@@ -18,6 +18,9 @@ import json
 app = Flask(__name__)
 CORS(app)
   # Permette le richieste CORS dal frontend
+
+
+
 # parte importata da main
 
 with open('C:/Users/aless/lai/venv/testiLeggi/gdpr.txt', 'r', encoding='utf-8') as file:
@@ -43,9 +46,6 @@ aiact_faiss_store = FAISS.load_local("C:/Users/aless/OneDrive/Documenti/GitHub/L
 
 
 
-
-from flask import jsonify
-
 def call_tutto(data):
     # Logga i dati ricevuti
     app.logger.debug(f"Data received: {data}")
@@ -63,20 +63,28 @@ def call_tutto(data):
     # Chiama la funzione `tutto` con le sei risposte
     risposte_gdpr, risposte_aiact = tutto(*answers)
     
-    # Prepara la risposta in formato JSON
     result = {
         "GDPR": [
-            {"domanda": r[0], "risposta": r[1], "voto": r[2]} for r in risposte_gdpr
+            {"domanda": r["domanda"], "risposta": r["risposta"], "voto": r["voto"]} for r in risposte_gdpr
         ],
         "AIACT": [
-            {"domanda": r[0], "risposta": r[1], "voto": r[2]} for r in risposte_aiact
+            {"domanda": r["domanda"], "risposta": r["risposta"], "voto": r["voto"]} for r in risposte_aiact
         ]
     }
-    return jsonify(result)
+    print("Tipo di result in call_tutto:", type(result))
+    return result
 
 print(66)
 @app.route('/process', methods=['POST'])
 def process():
+    if request.method == 'OPTIONS':
+        # Preflight request; respond with allowed methods and headers
+        response = make_response('', 204)
+        response.headers["Access-Control-Allow-Origin"] = "*" 
+        response.headers["Access-Control-Allow-Methods"] = "POST, OPTIONS"
+        response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
+        return response
+
     data = request.json
     print(67)
     app.logger.debug(f"Data received: {data}")  # Log received data
