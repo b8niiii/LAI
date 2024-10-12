@@ -19,17 +19,6 @@ app = Flask(__name__)
 CORS(app)
   # Permette le richieste CORS dal frontend
 
-
-
-# parte importata da main
-
-with open('C:/Users/aless/lai/venv/testiLeggi/gdpr.txt', 'r', encoding='utf-8') as file:
-    gdpr = file.read() 
-with open('C:/Users/aless/lai/venv/testiLeggi/AIACT.txt', 'r', encoding='utf-8') as file:
-    aiact = file.read() 
-
-
-
 warnings.filterwarnings('ignore')
 load_dotenv()  
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
@@ -44,7 +33,10 @@ aiact_faiss_store = FAISS.load_local("C:/Users/aless/OneDrive/Documenti/GitHub/L
                                         allow_dangerous_deserialization=True)
 
 
-
+with open('C:/Users/aless/lai/venv/testiLeggi/gdpr.txt', 'r', encoding='utf-8') as file:
+            gdpr = file.read() 
+with open('C:/Users/aless/lai/venv/testiLeggi/AIACT.txt', 'r', encoding='utf-8') as file:
+            aiact = file.read() 
 
 def call_tutto(data):
     # Logga i dati ricevuti
@@ -61,7 +53,7 @@ def call_tutto(data):
         app.logger.debug("All answers received correctly.")
         
     # Chiama la funzione `tutto` con le sei risposte
-    risposte_gdpr, risposte_aiact = tutto(*answers)
+    risposte_gdpr, risposte_aiact = tutto(*answers, OPENAI_API_KEY, embeddings, gdpr_faiss_store, aiact_faiss_store, gdpr, aiact)
     
     result = {
         "GDPR": [
@@ -74,8 +66,7 @@ def call_tutto(data):
     print("Tipo di result in call_tutto:", type(result))
     return result
 
-print(66)
-@app.route('/process', methods=['POST'])
+@app.route('/process', methods=['POST']) # to make the process function accessible through the endpoint /process
 def process():
     if request.method == 'OPTIONS':
         # Preflight request; respond with allowed methods and headers
@@ -86,17 +77,16 @@ def process():
         return response
 
     data = request.json
-    print(67)
-    app.logger.debug(f"Data received: {data}")  # Log received data
-    if not data:
-        return jsonify({"error": "No data provided"}), 400
+    #app.logger.debug(f"Data received: {data}")  # Log received data
+    #if not data:
+    #   return jsonify({"error": "No data provided"}), 400
 
     result = call_tutto(data)
-    app.logger.debug(f"Result generated: {result}")  # Log the result
+    #app.logger.debug(f"Result generated: {result}")  # Log the result
 
     return jsonify(result), 200
 
 
+
 if __name__ == '__main__':
     app.run(host='127.0.0.1', port=5000, debug=True)
-

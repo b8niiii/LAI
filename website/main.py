@@ -22,22 +22,13 @@ class Voti(BaseModel):
         voto: int
         risposta: List[str]
         
-def tutto(answer0, answer1, answer2, answer3, answer4, answer5):
-        OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
-        embeddings = OpenAIEmbeddings(api_key=OPENAI_API_KEY)
-        gdpr_faiss_store = FAISS.load_local("C:/Users/aless/OneDrive/Documenti/GitHub/LAI/gdpr_vec_store",
-                                            embeddings,
-                                            allow_dangerous_deserialization=True)
-        aiact_faiss_store = FAISS.load_local("C:/Users/aless/OneDrive/Documenti/GitHub/LAI/aiact_vec_store", 
-                                            embeddings,
-                                            allow_dangerous_deserialization=True)
+def tutto(answer0, answer1, answer2, answer3, answer4, answer5, OPENAI_API_KEY ,embeddings, gdpr_faiss_store, aiact_faiss_store,  gdpr, aiact):
+        
+        
         print(1)
         start_time = time.time()
         logging.debug(f"Starting tutto() at {start_time}")
-        with open('C:/Users/aless/lai/venv/testiLeggi/gdpr.txt', 'r', encoding='utf-8') as file:
-            gdpr = file.read() 
-        with open('C:/Users/aless/lai/venv/testiLeggi/AIACT.txt', 'r', encoding='utf-8') as file:
-            aiact = file.read() 
+        
 
         
         risposte = [answer0, answer1, answer2, answer3, answer4, answer5]
