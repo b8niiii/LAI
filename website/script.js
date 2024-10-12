@@ -44,17 +44,12 @@ function showNextMessage() {
         appendMessage('bot', questions[currentQuestionIndex]); // Display the next question
         currentQuestionIndex++;
     } else {
-        appendMessage('bot', "Thanks for your responses! We'll be in touch soon.");
-        userInput.disabled = true;
-        sendBtn.disabled = true;
-
         // Once all questions are answered, send the responses to the server
         sendData(userResponses); // Send responses to the backend
     }
 }
 
 // Function to send user's responses to the backend
-// Funzione per inviare le risposte dell'utente al backend
 function sendData(answers) {
     fetch('http://127.0.0.1:5000/process', {
         method: 'POST',

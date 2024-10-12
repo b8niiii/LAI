@@ -1,4 +1,3 @@
-# Warning control
 import dill as pickle
 import warnings
 from openai import OpenAI
@@ -187,35 +186,3 @@ if __name__ == '__main__':
     gdpr_vectorstore.save_local("C:/Users/aless/lai/venv/gdpr_vec_store")
     aiact_vectorstore.save_local("C:/Users/aless/lai/venv/aiact_vec_store")
     """
-
-
-    # Initialize your embeddings
-    
-
-    
-    print(20)
-    domanda0 = input("""What types of personal data does your software collect, and how is this data processed and 
-    stored? Please include details about the data subjects, the purpose of data collection, 
-    and any third-party data processors involved. """)
-
-    domanda1 = input("""How does your software manage user consent, and are there any mechanisms
-    to ensure that data subjects can exercise their rights (such as access, rectification, erasure, restriction,
-    data portability, and objection)?If so, please describe how these processes are documented and any tools you use to manage them. 
-                    """)
-
-    domanda2 = input("""Have you implemented any measures to protect personal data, do you have a 
-    procedure for handling data breaches, including notification to authorities and affected 
-    data subjects?  """)
-
-    domanda3 = input("""Does your software utilize any AI or machine learning algorithms, particularly in automated
-    decision-making processes or in profiling? If so, please describe these AI systems, their decision-making 
-    processes, and how their outputs are used. """)
-
-    domanda4 = input("""Is there any other information regarding your SaaS's operations, data processing
-    activities, or AI systems that you believe is relevant for assessing compliance with GDPR 
-    and AIACT? """)
-
-    domanda5 = input(""" Provide a very concise and brief description of how does your software work: """)
-
-
-    
