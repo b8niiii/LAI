@@ -14,33 +14,16 @@ import logging
 import time
 
     
-print(10)
-
-
 class Voti(BaseModel):
         voto: int
         risposta: List[str]
         
 def tutto(answer0, answer1, answer2, answer3, answer4, answer5, OPENAI_API_KEY ,embeddings, gdpr_faiss_store, aiact_faiss_store,  gdpr, aiact):
-        
-        
-        print(1)
-        start_time = time.time()
-        logging.debug(f"Starting tutto() at {start_time}")
-        
-
-        
         risposte = [answer0, answer1, answer2, answer3, answer4, answer5]
-        logging.debug(f"User answers received: {risposte}")
-        
         risposte_migliorate = []
-        
         client = OpenAI()
-        print(2)
         # Start processing the user responses
         for risposta in risposte:
-            logging.debug(f"Processing answer: {risposta}")
-            try:
                 completion = client.beta.chat.completions.parse(
                     model="gpt-4o-mini",
                     messages=[
@@ -55,13 +38,7 @@ def tutto(answer0, answer1, answer2, answer3, answer4, answer5, OPENAI_API_KEY ,
                 )
                 summary = completion.choices[0].message.content
                 risposte_migliorate.append(summary)
-                logging.debug(f"Reformulated answer: {summary}")
-            except Exception as e:
-                logging.error(f"Error processing answer '{risposta}': {e}")
-                raise e
-
-        logging.debug(f"Finished processing user responses at {time.time() - start_time} seconds")
-        print(3)
+           
         # Split responses into GDPR and AIACT related
         gdpr_related = risposte_migliorate[0:3]
         aiact_related = risposte_migliorate[3:]
@@ -158,13 +135,6 @@ def tutto(answer0, answer1, answer2, answer3, answer4, answer5, OPENAI_API_KEY ,
             for risposta, voti in sorted(votazioni_aiact.items(), key=lambda item: item[1].voto, reverse=True)
             if voti.voto in [2, 3]
 ]
-        print('risposte di chat salvate')
-        
-        logging.debug(f"Final GDPR responses: {risposte_gdpr}")
-        logging.debug(f"Final AIACT responses: {risposte_aiact}")
-        
-        logging.debug(f"Completed tutto() at {time.time() - start_time} seconds")
-        
         return risposte_gdpr, risposte_aiact
 
 
