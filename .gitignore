@@ -185,3 +185,5 @@ __pycache__/
 # Ignora file personali o di note (opzionale)
 inspo.txt
 notes.txt
+
+Scripts/
