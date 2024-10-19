@@ -167,3 +167,21 @@ cython_debug/
 /gdpr_vec_store/
 
 /testiLeggi/
+
+Lib/
+Include/
+
+pyvenv.cfg
+
+# Ignora configurazioni dell'editor
+.vscode/
+
+# Ignora file compilati Python
+__pycache__/
+
+# Ignora file environment
+.env
+
+# Ignora file personali o di note (opzionale)
+inspo.txt
+notes.txt
