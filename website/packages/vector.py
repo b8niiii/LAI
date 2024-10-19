@@ -76,16 +76,16 @@ def split_articles(text):
     return lista
 
 # funzione per salvare dizionario con domanda : [articoli]
-def question_article_dic(questions, faiss_store, testo, dizionario):
-    for domanda in questions:
+def question_article_dic(answers, faiss_store, code, dict):
+    for answer in answers:
         articles_list = []
-        chunks = get_chunks(faiss_store, domanda)  # restituisce uno o più chunks relativi a una singola domanda
+        chunks = get_chunks(faiss_store, answer)  # restituisce uno o più chunks relativi a una singola domanda
         for chunk in chunks:
-            articles = find_articles(testo, chunk)  # unico testo che può avere uno o più articoli
+            articles = find_articles(code, chunk)  # unico testo che può avere uno o più articoli
             articles_splitted = split_articles(articles)
             articles_list.extend(articles_splitted)
-        dizionario[domanda] = articles_list
-    return dizionario
+        dict[answer] = articles_list
+    return dict
 
 
   

@@ -1,7 +1,7 @@
 import warnings
 from flask import Flask, request, jsonify, make_response
 from flask_cors import CORS
-from main import tutto
+from main import tutto, Voti
 from openai import OpenAI
 import os
 import faiss
@@ -39,9 +39,6 @@ with open('C:/Users/aless/lai/venv/testiLeggi/AIACT.txt', 'r', encoding='utf-8')
             aiact = file.read() 
 
 def call_tutto(data):
-    # Logga i dati ricevuti
-    app.logger.debug(f"Data received: {data}")
-    
     # Prendi le sei risposte inviate dal frontend
     answers = [data.get(f"answer{i}", None) for i in range(6)]
     

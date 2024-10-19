@@ -42,15 +42,11 @@ def tutto(answer0, answer1, answer2, answer3, answer4, answer5, OPENAI_API_KEY ,
         # Split responses into GDPR and AIACT related
         gdpr_related = risposte_migliorate[0:3]
         aiact_related = risposte_migliorate[3:]
-        logging.debug(f"GDPR-related responses: {gdpr_related}")
-        logging.debug(f"AIACT-related responses: {aiact_related}")
 
         # Process articles and compare with FAISS vectors
         article_dic_cleaned_gdpr = question_article_dic(gdpr_related, gdpr_faiss_store, gdpr, {})
         article_dic_cleaned_aiact = question_article_dic(aiact_related, aiact_faiss_store, aiact, {})
-        logging.debug(f"Cleaned article dictionary for GDPR: {article_dic_cleaned_gdpr}")
-        logging.debug(f"Cleaned article dictionary for AIACT: {article_dic_cleaned_aiact}")
-
+        
         votazioni_gdpr: Dict[str, Voti] = {}
 
         # Process GDPR votes
