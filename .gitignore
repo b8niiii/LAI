@@ -162,6 +162,8 @@ cython_debug/
 #.idea/
 
 
-aiact_vec_store
-gdpr_vec_store
-testiLeggi
+/aiact_vec_store/
+
+/gdpr_vec_store/
+
+/testiLeggi/
